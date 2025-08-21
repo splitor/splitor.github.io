@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            /* Light Theme Variables */
+            --bg-light: #f3f4f6;
+            --card-bg-light: rgba(255, 255, 255, 0.75);
+            --text-light: #111827;
+            --text-muted-light: #4b5563;
+            --border-light: rgba(0, 0, 0, 0.1);
+            --input-bg-light: #ffffff;
+            --subtle-bg-light: rgba(0,0,0,0.05);
+
+            /* Dark Theme Variables */
+            --bg-dark: #020617;
+            --card-bg-dark: rgba(15, 23, 42, 0.6);
+            --text-dark: #e2e8f0;
+            --text-muted-dark: #94a3b8;
+            --border-dark: rgba(255, 255, 255, 0.15);
+            --input-bg-dark: rgba(30, 41, 59, 0.7);
+            --subtle-bg-dark: rgba(0,0,0,0.2);
+        }
+
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+
+        /* Light Theme */
+        html:not(.dark) body {
+            background-color: var(--bg-light); color: var(--text-light);
+            background-image: radial-gradient(circle at 5% 5%, rgba(59, 130, 246, 0.1), transparent 50%),
+                              radial-gradient(circle at 95% 95%, rgba(239, 68, 68, 0.1), transparent 50%);
+        }
+        html:not(.dark) .card { background-color: var(--card-bg-light); border-color: var(--border-light); }
+        html:not(.dark) .text-main { color: var(--text-light); }
+        html:not(.dark) .text-muted { color: var(--text-muted-light); }
+        html:not(.dark) .input-field { background-color: var(--input-bg-light); border-color: #d1d5db; color: var(--text-light); }
+        html:not(.dark) .participant-tag { background-color: #e5e7eb; color: #374151; }
+        html:not(.dark) .bg-subtle { background-color: var(--subtle-bg-light); }
+
+        /* Dark Theme */
+        html.dark body {
+            background-color: var(--bg-dark); color: var(--text-dark);
+            background-image: radial-gradient(ellipse at 5% 5%, rgba(59, 130, 246, 0.25), transparent 60%),
+                              radial-gradient(ellipse at 95% 95%, rgba(220, 38, 38, 0.25), transparent 60%);
+        }
+        html.dark .card { background-color: var(--card-bg-dark); border-color: var(--border-dark); }
+        html.dark .text-main { color: var(--text-dark); }
+        html.dark .text-muted { color: var(--text-muted-dark); }
+        html.dark .input-field { background-color: var(--input-bg-dark); border-color: #4b5563; color: var(--text-dark); }
+        html.dark .participant-tag { background-color: #334155; color: #cbd5e1; }
+        html.dark .bg-subtle { background-color: var(--subtle-bg-dark); }
+
+        /* Shared Styles */
+        .card { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-radius: 1rem; border: 1px solid; padding: 1.5rem; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); transition: background-color 0.3s, border-color 0.3s; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.625rem 1.25rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s ease-in-out; cursor: pointer; }
+        .btn-primary { background-color: #3b82f6; color: white; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25); }
+        .btn-primary:hover { background-color: #2563eb; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3); }
+        .btn-danger { background-color: #ef4444; color: white; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25); }
+        .btn-danger:hover { background-color: #dc2626; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3); }
+        .btn-secondary { background-color: #6b7280; color: white; }
+        .btn-secondary:hover { background-color: #4b5563; }
+        
+        /* Custom Input Styles */
+        .input-field { width: 100%; border-radius: 0.5rem; padding: 0.625rem 0.875rem; transition: border-color 0.2s, box-shadow 0.2s; border: 1px solid; }
+        .input-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); }
+        select.input-field { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 50; transition: opacity 0.3s ease; }
+        .modal-content { transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay:not(.hidden) .modal-content { transform: scale(1); }
+        .empty-state { text-align: center; padding: 2rem 1rem; opacity: 0.7; }
+
+        /* Shared Among Avatars */
+        .participant-avatar { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 0.5rem; border-radius: 0.5rem; transition: all 0.2s; border: 2px solid transparent; }
+        .participant-avatar .avatar-icon { width: 40px; height: 40px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: 600; transition: all 0.2s; }
+        .participant-avatar .avatar-name { font-size: 0.75rem; margin-top: 0.25rem; }
+        .participant-avatar.selected { border-color: #3b82f6; }
+        .participant-avatar.selected .avatar-icon { background-color: #3b82f6 !important; color: white !important; }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+    <div id="app" class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8">
+        
+        <div class="lg:col-span-3 space-y-8">
+            <header class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl sm:text-4xl font-bold text-main" data-lang="appTitle">Splitor 💸</h1>
+                    <p class="text-muted mt-2" data-lang="appSubtitle">Fairly split expenses for your next group trip.</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <select id="lang-switcher" class="input-field !w-auto text-sm"><option value="ua">UA (₴)</option><option value="en">EN (€)</option></select>
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"><i data-lucide="sun" class="w-6 h-6 text-main hidden dark:block"></i><i data-lucide="moon" class="w-6 h-6 text-main block dark:hidden"></i></button>
+                    <button id="reset-btn" class="p-2 rounded-full text-red-500 hover:bg-red-500/10 transition-colors"><i data-lucide="trash" class="w-6 h-6"></i></button>
+                </div>
+            </header>
+
+            <div class="card">
+                <h2 class="text-xl font-semibold text-main mb-4" data-lang="participantsTitle">👥 Participants</h2>
+                <div id="participant-list" class="flex flex-wrap gap-2 mb-4"></div>
+                <form id="add-participant-form" class="flex gap-2">
+                    <input type="text" id="participant-name" class="input-field flex-grow" data-lang-placeholder="participantPlaceholder">
+                    <button type="submit" class="btn btn-primary"><i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> <span data-lang="addBtn">Add</span></button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 class="text-xl font-semibold text-main mb-4" data-lang="addExpenseTitle">📝 Add New Expense</h2>
+                <form id="add-expense-form" class="space-y-6"></form>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 space-y-8">
+            <div class="card">
+                <h2 class="text-xl font-semibold text-main mb-4" data-lang="expenseLogTitle">🧾 Expense Log</h2>
+                <div id="expense-list" class="space-y-3 max-h-[300px] lg:max-h-full overflow-y-auto pr-2"></div>
+            </div>
+
+            <div class="card">
+                <h2 class="text-xl font-semibold text-main mb-4" data-lang="resultsTitle">📊 Results</h2>
+                <div id="results-output" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay hidden"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let participants = [];
+            let expenses = [];
+            let confirmCallback = null;
+            let CURRENCY = '₴';
+            let currentLang = 'ua';
+            const avatarColors = ['#f87171', '#fb923c', '#fbbf24', '#a3e635', '#4ade80', '#34d399', '#2dd4bf', '#22d3ee', '#38bdf8', '#60a5fa', '#818cf8', '#a78bfa', '#c084fc', '#e879f9', '#f472b6'];
+
+            const initialData = {
+                participants: ['Art', 'Ya1', 'Ya2', 'Pav', 'Tov', 'Kav'],
+                expenses: [
+                    { id: Date.now() + 1, description: 'Food', amount: 4700, paidBy: 'Ya1', sharedWith: ['Art', 'Ya1', 'Ya2', 'Pav', 'Tov', 'Kav'] },
+                    { id: Date.now() + 2, description: 'Drink', amount: 1000, paidBy: 'Ya1', sharedWith: ['Art', 'Ya1', 'Ya2', 'Kav'] },
+                    { id: Date.now() + 3, description: 'Altanka', amount: 1000, paidBy: 'Art', sharedWith: ['Art', 'Ya1', 'Ya2', 'Pav', 'Tov', 'Kav'] }
+                ]
+            };
+            
+            const langStrings = {
+                en: { currency: '€', appTitle: "Splitor 💸", appSubtitle: "Fairly split expenses for your next group trip.", participantsTitle: "👥 Participants", participantPlaceholder: "Enter new name", addBtn: "Add", addExpenseTitle: "📝 Add New Expense", expenseLogTitle: "🧾 Expense Log", resultsTitle: "📊 Results", descriptionLabel: "Description", descriptionPlaceholder: "e.g., Dinner, Groceries", amountLabel: "Amount", paidByLabel: "Paid By", sharedAmongLabel: "Shared Among", selectAllBtn: "Select All / None", addExpenseBtn: "Add Expense", noExpenses: "No expenses added yet.", noParticipants: "Add some participants to get started!", noResults: "Add participants and expenses to see results.", totalExpenses: "Total Expenses", whoOwesWhom: "Who Owes Whom", allSettled: "All settled up!", areYouSure: "Are you sure?", confirmReset: "This will delete all participants and expenses. This action cannot be undone.", confirmRemove: (name) => `This will remove ${name} and all associated expenses.`, cancelBtn: "Cancel", confirmBtn: "Confirm" },
+                ua: { currency: '₴', appTitle: "Splitor 💸", appSubtitle: "Справедливо розділіть витрати у вашій наступній подорожі.", participantsTitle: "👥 Учасники", participantPlaceholder: "Введіть нове ім'я", addBtn: "Додати", addExpenseTitle: "📝 Додати нову витрату", expenseLogTitle: "🧾 Журнал витрат", resultsTitle: "📊 Результати", descriptionLabel: "Опис", descriptionPlaceholder: "напр., Вечеря, Продукти", amountLabel: "Сума", paidByLabel: "Хто заплатив", sharedAmongLabel: "Розділити між", selectAllBtn: "Обрати всіх / нікого", addExpenseBtn: "Додати витрату", noExpenses: "Ще не додано жодних витрат.", noParticipants: "Додайте учасників, щоб почати!", noResults: "Додайте учасників та витрати, щоб побачити результати.", totalExpenses: "Загальні витрати", whoOwesWhom: "Хто кому винен", allSettled: "Все розраховано!", areYouSure: "Ви впевнені?", confirmReset: "Це видалить усіх учасників та витрати. Цю дію неможливо скасувати.", confirmRemove: (name) => `Це видалить ${name} та всі пов'язані з ним витрати.`, cancelBtn: "Скасувати", confirmBtn: "Підтвердити" }
+            };
+
+            const dom = {
+                themeToggle: document.getElementById('theme-toggle'),
+                langSwitcher: document.getElementById('lang-switcher'),
+                resetBtn: document.getElementById('reset-btn'),
+                participantList: document.getElementById('participant-list'),
+                addParticipantForm: document.getElementById('add-participant-form'),
+                participantNameInput: document.getElementById('participant-name'),
+                addExpenseForm: document.getElementById('add-expense-form'),
+                expenseList: document.getElementById('expense-list'),
+                resultsOutput: document.getElementById('results-output'),
+                confirmModalContainer: document.getElementById('confirm-modal')
+            };
+
+            const applyTheme = (isDark) => { document.documentElement.classList.toggle('dark', isDark); localStorage.theme = isDark ? 'dark' : 'light'; };
+            const setLanguage = (lang) => {
+                currentLang = lang;
+                CURRENCY = langStrings[lang].currency;
+                localStorage.setItem('language', lang);
+                dom.langSwitcher.value = lang;
+                document.querySelectorAll('[data-lang]').forEach(el => { el.textContent = langStrings[lang][el.dataset.lang]; });
+                document.querySelectorAll('[data-lang-placeholder]').forEach(el => { el.placeholder = langStrings[lang][el.dataset.langPlaceholder]; });
+                renderAll();
+            };
+
+            const renderAddExpenseForm = () => {
+                const lang = langStrings[currentLang];
+                dom.addExpenseForm.innerHTML = `
+                    <div><label for="expense-description" class="block text-sm font-medium mb-2 text-muted">${lang.descriptionLabel}</label><input type="text" id="expense-description" class="input-field" placeholder="${lang.descriptionPlaceholder}"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div><label for="expense-amount" class="block text-sm font-medium mb-2 text-muted">${lang.amountLabel}</label><input type="number" id="expense-amount" class="input-field" placeholder="0.00" step="0.01"></div>
+                        <div><label for="paid-by" class="block text-sm font-medium mb-2 text-muted">${lang.paidByLabel}</label><select id="paid-by" class="input-field">${participants.map(p => `<option value="${p}">${p}</option>`).join('')}</select></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2"><label class="block text-sm font-medium text-muted">${lang.sharedAmongLabel}</label><button type="button" id="select-all-btn" class="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 font-semibold">${lang.selectAllBtn}</button></div>
+                        <div id="shared-with-avatars" class="grid grid-cols-4 sm:grid-cols-6 gap-2 p-3 bg-subtle rounded-lg">
+                            ${participants.map((p, i) => `<div class="participant-avatar" data-name="${p}"><div class="avatar-icon bg-subtle text-main" style="background-color: ${avatarColors[i % avatarColors.length]}33; color: ${avatarColors[i % avatarColors.length]}">${p.charAt(0)}</div><span class="avatar-name text-muted">${p}</span></div>`).join('')}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full !py-3 !mt-8"><i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> ${lang.addExpenseBtn}</button>
+                `;
+                if (participants.length > 0) {
+                    const avatars = dom.addExpenseForm.querySelectorAll('.participant-avatar');
+                    avatars.forEach(avatar => avatar.addEventListener('click', () => avatar.classList.toggle('selected')));
+                    document.getElementById('select-all-btn').addEventListener('click', () => {
+                        const allSelected = Array.from(avatars).every(a => a.classList.contains('selected'));
+                        avatars.forEach(a => a.classList.toggle('selected', !allSelected));
+                    });
+                }
+            };
+            
+            const renderParticipants = () => {
+                if(participants.length === 0) { dom.participantList.innerHTML = `<p class="text-muted text-sm w-full text-center">${langStrings[currentLang].noParticipants}</p>`; } 
+                else {
+                    dom.participantList.innerHTML = participants.map(name => `<div class="participant-tag inline-flex items-center py-1 px-3 rounded-full"><span>${name}</span><button class="ml-2 text-muted hover:text-main" data-name="${name}"><i data-lucide="x" class="w-3 h-3"></i></button></div>`).join('');
+                    dom.participantList.querySelectorAll('button').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const name = btn.dataset.name;
+                            showConfirmModal(langStrings[currentLang].confirmRemove(name), () => removeParticipant(name));
+                        });
+                    });
+                }
+                lucide.createIcons();
+                renderAddExpenseForm();
+            };
+
+            const renderExpenses = () => {
+                const lang = langStrings[currentLang];
+                if (expenses.length === 0) { dom.expenseList.innerHTML = `<div class="empty-state"><i data-lucide="receipt" class="w-12 h-12 mx-auto text-muted"></i><p class="text-muted mt-2">${lang.noExpenses}</p></div>`; } 
+                else {
+                    dom.expenseList.innerHTML = expenses.slice().reverse().map(expense => `<div class="p-3 bg-subtle rounded-lg"><div class="flex items-start justify-between gap-4"><div class="flex-grow"><p class="font-semibold text-main">${expense.description}</p><p class="text-sm text-muted mt-1">Paid by <span class="font-medium text-blue-500 dark:text-blue-400">${expense.paidBy}</span></p></div><div class="text-right flex-shrink-0"><p class="font-semibold text-lg text-main">${CURRENCY}${expense.amount.toFixed(2)}</p><button class="text-red-500 hover:text-red-400 mt-1" data-id="${expense.id}"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><div class="text-xs text-muted mt-2 pt-2 border-t border-black/10 dark:border-white/10">Shared with: ${expense.sharedWith.join(', ')}</div></div>`).join('');
+                    dom.expenseList.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => removeExpense(Number(btn.dataset.id))));
+                }
+                lucide.createIcons();
+            };
+
+            const renderResults = (totalSpent, transactions) => {
+                const lang = langStrings[currentLang];
+                if (participants.length < 2 || expenses.length === 0) { dom.resultsOutput.innerHTML = `<div class="empty-state"><i data-lucide="pie-chart" class="w-12 h-12 mx-auto text-muted"></i><p class="text-muted mt-2">${lang.noResults}</p></div>`; lucide.createIcons(); return; }
+                let html = `<div class="p-4 bg-subtle rounded-lg"><h3 class="text-lg font-semibold text-main">Summary</h3><div class="mt-2 flex justify-between text-muted"><span>${lang.totalExpenses}:</span><span class="font-bold text-main">${CURRENCY}${totalSpent.toFixed(2)}</span></div></div>`;
+                if (transactions.length === 0) { html += `<div class="text-center p-4 bg-green-500/10 border border-green-500/20 rounded-lg"><i data-lucide="party-popper" class="w-10 h-10 mx-auto text-green-500"></i><p class="mt-2 font-semibold text-green-500 dark:text-green-400">${lang.allSettled}</p></div>`; } 
+                else {
+                    html += `<div><h3 class="text-lg font-semibold text-main mb-2">${lang.whoOwesWhom}</h3><div class="space-y-2">`;
+                    transactions.forEach(t => { html += `<div class="flex items-center justify-between p-3 bg-subtle rounded-lg"><div class="flex items-center gap-3"><span class="font-medium text-red-500 dark:text-red-400">${t.from}</span><i data-lucide="arrow-right" class="w-4 h-4 text-muted"></i><span class="font-medium text-green-500 dark:text-green-400">${t.to}</span></div><span class="font-bold text-lg text-main">${CURRENCY}${t.amount.toFixed(2)}</span></div>`; });
+                    html += `</div></div>`;
+                }
+                dom.resultsOutput.innerHTML = html;
+                lucide.createIcons();
+            };
+            
+            const showConfirmModal = (message, onConfirm) => {
+                const lang = langStrings[currentLang];
+                confirmCallback = onConfirm;
+                dom.confirmModalContainer.innerHTML = `<div class="modal-content card w-full max-w-sm text-center"><i data-lucide="alert-triangle" class="w-12 h-12 mx-auto text-yellow-500"></i><h3 class="text-lg font-bold text-main mt-4">${lang.areYouSure}</h3><p class="text-muted mt-2 text-sm">${message}</p><div class="flex justify-center gap-4 mt-6"><button id="modal-cancel" class="btn btn-secondary w-full">${lang.cancelBtn}</button><button id="modal-confirm" class="btn btn-danger w-full">${lang.confirmBtn}</button></div></div>`;
+                lucide.createIcons();
+                dom.confirmModalContainer.classList.remove('hidden');
+                document.getElementById('modal-confirm').addEventListener('click', () => { if (confirmCallback) confirmCallback(); hideConfirmModal(); });
+                document.getElementById('modal-cancel').addEventListener('click', hideConfirmModal);
+            };
+            
+            const hideConfirmModal = () => { dom.confirmModalContainer.classList.add('hidden'); confirmCallback = null; };
+
+            const addParticipant = (name) => { if (name && !participants.includes(name)) { participants.push(name); renderAll(); } };
+            const removeParticipant = (nameToRemove) => {
+                participants = participants.filter(p => p !== nameToRemove);
+                expenses = expenses.filter(e => {
+                    if (e.paidBy === nameToRemove) return false;
+                    e.sharedWith = e.sharedWith.filter(p => p !== nameToRemove);
+                    return e.sharedWith.length > 0;
+                });
+                renderAll();
+            };
+            const addExpense = (expense) => { expenses.push(expense); renderAll(); };
+            const removeExpense = (id) => { expenses = expenses.filter(e => e.id !== id); renderAll(); };
+            const calculateDebts = () => {
+                const balances = participants.reduce((acc, p) => ({ ...acc, [p]: 0 }), {});
+                let totalSpent = 0;
+                expenses.forEach(expense => {
+                    totalSpent += expense.amount;
+                    const share = expense.amount / expense.sharedWith.length;
+                    balances[expense.paidBy] += expense.amount;
+                    expense.sharedWith.forEach(person => { balances[person] -= share; });
+                });
+                const debtors = [], creditors = [];
+                for (const person in balances) {
+                    if (balances[person] < -0.01) debtors.push({ name: person, amount: -balances[person] });
+                    else if (balances[person] > 0.01) creditors.push({ name: person, amount: balances[person] });
+                }
+                const transactions = []; let d = 0, c = 0;
+                while (d < debtors.length && c < creditors.length) {
+                    const amount = Math.min(debtors[d].amount, creditors[c].amount);
+                    transactions.push({ from: debtors[d].name, to: creditors[c].name, amount });
+                    debtors[d].amount -= amount; creditors[c].amount -= amount;
+                    if (debtors[d].amount < 0.01) d++;
+                    if (creditors[c].amount < 0.01) c++;
+                }
+                renderResults(totalSpent, transactions);
+            };
+
+            const renderAll = () => { renderParticipants(); renderExpenses(); calculateDebts(); };
+
+            dom.addParticipantForm.addEventListener('submit', (e) => { e.preventDefault(); addParticipant(dom.participantNameInput.value.trim()); dom.participantNameInput.value = ''; });
+            dom.addExpenseForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const description = dom.addExpenseForm.querySelector('#expense-description').value.trim();
+                const amount = parseFloat(dom.addExpenseForm.querySelector('#expense-amount').value);
+                const paidBy = dom.addExpenseForm.querySelector('#paid-by').value;
+                const sharedWith = Array.from(dom.addExpenseForm.querySelectorAll('.participant-avatar.selected')).map(n => n.dataset.name);
+                if (!description || isNaN(amount) || amount <= 0 || !paidBy || sharedWith.length === 0) { alert('Please fill out all fields correctly.'); return; }
+                addExpense({ id: Date.now(), description, amount, paidBy, sharedWith });
+                renderAddExpenseForm();
+            });
+            dom.resetBtn.addEventListener('click', () => { showConfirmModal(langStrings[currentLang].confirmReset, () => { participants = []; expenses = []; renderAll(); }); });
+            dom.confirmModalContainer.addEventListener('click', (e) => { if (e.target === dom.confirmModalContainer) hideConfirmModal(); });
+            dom.themeToggle.addEventListener('click', () => applyTheme(!document.documentElement.classList.contains('dark')));
+            dom.langSwitcher.addEventListener('change', (e) => setLanguage(e.target.value));
+
+            const initialize = () => {
+                applyTheme(localStorage.theme === 'dark' || !('theme' in localStorage)); // Default to dark
+                participants = [...initialData.participants];
+                expenses = [...initialData.expenses];
+                setLanguage(localStorage.getItem('language') || 'en');
+                lucide.createIcons();
+            };
+            initialize();
+        });
+    </script>
+</body>
+</html>
