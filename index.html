@@ -314,7 +314,7 @@
                 applyTheme(localStorage.theme === 'dark' || !('theme' in localStorage)); // Default to dark
                 participants = [...initialData.participants];
                 expenses = [...initialData.expenses];
-                setLanguage(localStorage.getItem('language') || 'en');
+                setLanguage(localStorage.getItem('language') || 'ua');
                 lucide.createIcons();
             };
             initialize();
